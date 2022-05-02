@@ -3,11 +3,12 @@ package database
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	"github.com/braejan/platzi-go-rest-websockets/entities"
 	"github.com/braejan/platzi-go-rest-websockets/repository"
 	"github.com/braejan/platzi-go-rest-websockets/utils"
+
+	_ "github.com/lib/pq" // necessary to work with postgresql
 )
 
 type PostgresRepositoryImpl struct {
@@ -30,11 +31,11 @@ func NewPostgresRepository(ctx *context.Context) (repository repository.Postgres
 
 // User repository interface implementation
 const (
-	CreateUserQuery = `INSERT INTO users (ID, email, password) VALUES($1, $2, $3)`
+	CreateUserQuery = `INSERT INTO users (ID, email) VALUES($1, $2)`
 )
 
-func (repository *PostgresRepositoryImpl) CreateUser(ctx context.Context, user *entities.User) (err error) {
-	_, err = repository.db.ExecContext(ctx, CreateUserQuery, user.ID, user.Email, user.Password)
+func (repository *PostgresRepositoryImpl) CreateUser(ctx *context.Context, user *entities.User) (err error) {
+	_, err = repository.db.ExecContext(*ctx, CreateUserQuery, user.ID, user.Email)
 	return
 }
 
@@ -42,8 +43,8 @@ const (
 	GetUserByIDQuery = "SELECT email FROM user where ID = $1"
 )
 
-func (repository *PostgresRepositoryImpl) GetUserByID(ctx context.Context, userID int64) (user *entities.User, err error) {
-	rows, err := repository.db.QueryContext(ctx, GetUserByIDQuery, userID)
+func (repository *PostgresRepositoryImpl) GetUserByID(ctx *context.Context, userID string) (user *entities.User, err error) {
+	rows, err := repository.db.QueryContext(*ctx, GetUserByIDQuery, userID)
 	if err != nil {
 		return
 	}
@@ -56,13 +57,12 @@ func (repository *PostgresRepositoryImpl) GetUserByID(ctx context.Context, userI
 		return
 	}
 	user.ID = userID
-	user.Password = fmt.Sprintf("%32s", "*")
 	return
 }
-func (repository *PostgresRepositoryImpl) DeleteUserByID(ctx context.Context, userID int64) (err error) {
+func (repository *PostgresRepositoryImpl) DeleteUserByID(ctx *context.Context, userID string) (err error) {
 	return
 }
-func (repository *PostgresRepositoryImpl) UpdateUser(ctx context.Context, user *entities.User) (err error) {
+func (repository *PostgresRepositoryImpl) UpdateUser(ctx *context.Context, user *entities.User) (err error) {
 	return
 }
 
